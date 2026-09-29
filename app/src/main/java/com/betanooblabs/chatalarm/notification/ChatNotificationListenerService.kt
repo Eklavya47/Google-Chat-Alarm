@@ -4,6 +4,7 @@ import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class ChatNotificationListenerService : NotificationListenerService() {
@@ -11,20 +12,53 @@ class ChatNotificationListenerService : NotificationListenerService() {
     companion object {
         private const val TAG = "ChatAlarm"
         private const val GMAIL_PACKAGE = "com.google.android.gm"
+        // Temporary. This will come from app settings later.
+        private const val USER_NAME = "DIPENSHU DEEP BHAT"
     }
+
+    override fun onListenerConnected() {
+        super.onListenerConnected()
+
+        Log.d(TAG, "Notification listener CONNECTED")
+    }
+
+    @Inject
+    lateinit var chatNotificationParser: ChatNotificationParser
+
+    private val mentionDetector = MentionDetector()
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         if (sbn.packageName != GMAIL_PACKAGE) {
             return
         }
 
-        val extras = sbn.notification.extras
+        val chatNotification = chatNotificationParser.parse(sbn)
+            ?: return
 
-        Log.d(TAG, "========== GMAIL NOTIFICATION ==========")
-        Log.d(TAG, "Title: ${extras.getCharSequence("android.title")}")
-        Log.d(TAG, "Text: ${extras.getCharSequence("android.text")}")
-        Log.d(TAG, "BigText: ${extras.getCharSequence("android.bigText")}")
-        Log.d(TAG, "Category: ${sbn.notification.category}")
-        Log.d(TAG, "========================================")
+        when (chatNotification.type) {
+
+            ChatType.DIRECT_MESSAGE -> {
+                Log.d(TAG, "DM received")
+            }
+
+            ChatType.SPACE -> {
+                val mentioned = mentionDetector.isMentioned(
+                    message = chatNotification.message,
+                    userName = USER_NAME
+                )
+
+                if (mentioned) {
+                    Log.d(TAG, "YOU WERE MENTIONED")
+                } else {
+                    Log.d(TAG, "Space message - no mention")
+                }
+            }
+        }
+    }
+
+    override fun onListenerDisconnected() {
+        super.onListenerDisconnected()
+
+        Log.d(TAG, "Notification listener DISCONNECTED")
     }
 }
