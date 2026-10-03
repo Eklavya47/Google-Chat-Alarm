@@ -1,10 +1,12 @@
 package com.betanooblabs.chatalarm.notification
 
+import android.os.Build
 import android.service.notification.StatusBarNotification
-import android.util.Log
+import androidx.annotation.RequiresApi
 
 class ChatNotificationParser {
 
+    @RequiresApi(Build.VERSION_CODES.P)
     fun parse(sbn: StatusBarNotification): ChatNotification? {
         val notification = sbn.notification
         val extras = notification.extras
@@ -31,14 +33,8 @@ class ChatNotificationParser {
             }
         }
 
-        val senderEmail = subText
-            .substringAfter("•")
-            .trim()
-            .takeIf { it.isNotEmpty() }
-
         return ChatNotification(
             sender = title,
-            senderEmail = senderEmail,
             message = text,
             type = type
         )

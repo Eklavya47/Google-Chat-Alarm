@@ -61,4 +61,9 @@ dependencies {
 
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.hilt.navigation.compose)
+
+    // datastore
+    implementation(libs.androidx.datastore.preferences)
+
+    implementation(libs.androidx.navigation.compose)
 }

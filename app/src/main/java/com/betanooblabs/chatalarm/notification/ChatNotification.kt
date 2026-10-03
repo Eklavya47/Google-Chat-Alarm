@@ -2,7 +2,6 @@ package com.betanooblabs.chatalarm.notification
 
 data class ChatNotification(
     val sender: String?,
-    val senderEmail: String?,
     val message: String?,
     val type: ChatType,
 )
