@@ -10,6 +10,10 @@ class ChatAlarmManager @Inject constructor(
 ) {
 
     fun startAlarm() {
+        if (AlarmSoundService.isRunning) {
+            return
+        }
+        
         val intent = Intent(
             context,
             AlarmSoundService::class.java

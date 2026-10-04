@@ -23,6 +23,9 @@ class AlarmSoundService : Service() {
 
         const val ACTION_STOP_ALARM =
             "com.betanooblabs.chatalarm.STOP_ALARM"
+
+        var isRunning = false
+            private set
     }
 
     private var mediaPlayer: MediaPlayer? = null
@@ -30,6 +33,8 @@ class AlarmSoundService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+
+        isRunning = true
 
         createNotificationChannel()
 
@@ -158,6 +163,8 @@ class AlarmSoundService : Service() {
 
         vibrator?.cancel()
         vibrator = null
+
+        isRunning = false
 
         super.onDestroy()
     }

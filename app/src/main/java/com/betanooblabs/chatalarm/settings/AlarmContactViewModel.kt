@@ -11,8 +11,15 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AlarmContactViewModel @Inject constructor(
-    private val repository: AlarmContactRepository
+    private val repository: ChatAlarmPreferencesRepository
 ) : ViewModel() {
+
+    val userChatName: StateFlow<String?> =
+        repository.userChatName.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = null
+        )
 
     val contactNames: StateFlow<Set<String>> =
         repository.contactNames.stateIn(
@@ -20,6 +27,12 @@ class AlarmContactViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = emptySet()
         )
+
+    fun setUserChatName(name: String) {
+        viewModelScope.launch {
+            repository.setUserChatName(name)
+        }
+    }
 
     fun addContact(name: String) {
         viewModelScope.launch {

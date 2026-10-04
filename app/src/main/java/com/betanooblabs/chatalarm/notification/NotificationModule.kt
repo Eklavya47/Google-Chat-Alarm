@@ -2,7 +2,7 @@ package com.betanooblabs.chatalarm.notification
 
 import android.content.Context
 import com.betanooblabs.chatalarm.alarm.ChatAlarmManager
-import com.betanooblabs.chatalarm.settings.AlarmContactRepository
+import com.betanooblabs.chatalarm.settings.ChatAlarmPreferencesRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -23,8 +23,8 @@ object NotificationModule {
     @Singleton
     fun provideAlarmContactRepository(
         @ApplicationContext context: Context
-    ): AlarmContactRepository {
-        return AlarmContactRepository(context)
+    ): ChatAlarmPreferencesRepository {
+        return ChatAlarmPreferencesRepository(context)
     }
 
     @Provides

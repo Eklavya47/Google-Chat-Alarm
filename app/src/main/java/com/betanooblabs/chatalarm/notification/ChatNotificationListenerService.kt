@@ -4,7 +4,7 @@ import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
 import com.betanooblabs.chatalarm.alarm.ChatAlarmManager
-import com.betanooblabs.chatalarm.settings.AlarmContactRepository
+import com.betanooblabs.chatalarm.settings.ChatAlarmPreferencesRepository
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -24,12 +24,10 @@ class ChatNotificationListenerService : NotificationListenerService() {
     companion object {
         private const val TAG = "ChatAlarm"
         private const val GMAIL_PACKAGE = "com.google.android.gm"
-        // Temporary. This will come from app settings later.
-        private const val USER_NAME = "DIPENSHU DEEP BHAT"
     }
 
     @Inject
-    lateinit var alarmContactRepository: AlarmContactRepository
+    lateinit var alarmContactRepository: ChatAlarmPreferencesRepository
 
     @Inject
     lateinit var chatNotificationParser: ChatNotificationParser
@@ -57,13 +55,17 @@ class ChatNotificationListenerService : NotificationListenerService() {
 
             ChatType.DIRECT_MESSAGE -> {
                 Log.d(TAG, "DM received")
-                val senderName = chatNotification.sender ?: return
+                val senderName = chatNotification.sender ?.trim() ?: return
 
                 serviceScope.launch {
                     val allowedContacts =
                         alarmContactRepository.contactNames.first()
 
-                    if (senderName in allowedContacts) {
+                    val isAllowed = allowedContacts.any {
+                        it.equals(senderName, ignoreCase = true)
+                    }
+
+                    if (isAllowed) {
                         Log.d(TAG, "ALARM_ALLOWED: $senderName")
                         chatAlarmManager.startAlarm()
                     } else {
@@ -73,16 +75,21 @@ class ChatNotificationListenerService : NotificationListenerService() {
             }
 
             ChatType.SPACE -> {
-                val mentioned = mentionDetector.isMentioned(
-                    message = chatNotification.message,
-                    userName = USER_NAME
-                )
+                serviceScope.launch {
+                    val userName = alarmContactRepository.userChatName.first()
+                        ?: return@launch
 
-                if (mentioned) {
-                    Log.d(TAG, "YOU WERE MENTIONED")
-                    chatAlarmManager.startAlarm()
-                } else {
-                    Log.d(TAG, "Space message - no mention")
+                    val mentioned = mentionDetector.isMentioned(
+                        message = chatNotification.message,
+                        userName = userName
+                    )
+
+                    if (mentioned) {
+                        Log.d(TAG, "YOU WERE MENTIONED")
+                        chatAlarmManager.startAlarm()
+                    } else {
+                        Log.d(TAG, "Space message - no mention")
+                    }
                 }
             }
         }
