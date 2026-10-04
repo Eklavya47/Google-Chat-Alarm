@@ -1,10 +1,9 @@
 package com.betanooblabs.chatalarm.notification
 
-import android.os.Build
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
-import androidx.annotation.RequiresApi
+import com.betanooblabs.chatalarm.alarm.ChatAlarmManager
 import com.betanooblabs.chatalarm.settings.AlarmContactRepository
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -35,6 +34,9 @@ class ChatNotificationListenerService : NotificationListenerService() {
     @Inject
     lateinit var chatNotificationParser: ChatNotificationParser
 
+    @Inject
+    lateinit var chatAlarmManager: ChatAlarmManager
+
     private val mentionDetector = MentionDetector()
 
     override fun onListenerConnected() {
@@ -43,7 +45,6 @@ class ChatNotificationListenerService : NotificationListenerService() {
         Log.d(TAG, "Notification listener CONNECTED")
     }
 
-    @RequiresApi(Build.VERSION_CODES.P)
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         if (sbn.packageName != GMAIL_PACKAGE) {
             return
@@ -64,6 +65,7 @@ class ChatNotificationListenerService : NotificationListenerService() {
 
                     if (senderName in allowedContacts) {
                         Log.d(TAG, "ALARM_ALLOWED: $senderName")
+                        chatAlarmManager.startAlarm()
                     } else {
                         Log.d(TAG, "ALARM_IGNORED: $senderName")
                     }
@@ -78,6 +80,7 @@ class ChatNotificationListenerService : NotificationListenerService() {
 
                 if (mentioned) {
                     Log.d(TAG, "YOU WERE MENTIONED")
+                    chatAlarmManager.startAlarm()
                 } else {
                     Log.d(TAG, "Space message - no mention")
                 }

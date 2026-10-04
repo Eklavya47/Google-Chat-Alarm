@@ -1,12 +1,9 @@
 package com.betanooblabs.chatalarm.notification
 
-import android.os.Build
 import android.service.notification.StatusBarNotification
-import androidx.annotation.RequiresApi
 
 class ChatNotificationParser {
 
-    @RequiresApi(Build.VERSION_CODES.P)
     fun parse(sbn: StatusBarNotification): ChatNotification? {
         val notification = sbn.notification
         val extras = notification.extras
