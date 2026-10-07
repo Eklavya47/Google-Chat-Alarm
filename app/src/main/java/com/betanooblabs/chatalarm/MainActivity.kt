@@ -8,11 +8,19 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import com.betanooblabs.chatalarm.settings.ChatAlarmPreferencesRepository
+import com.betanooblabs.chatalarm.setup.BackgroundSettingsManager
 
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var backgroundSettingsManager: BackgroundSettingsManager
+    @Inject
+    lateinit var preferencesRepository: ChatAlarmPreferencesRepository
 
     private val notificationPermissionLauncher =
         registerForActivityResult(
@@ -30,7 +38,10 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
         setContent {
-            AppNavigation()
+            ChatAlarmApp(
+                backgroundSettingsManager = backgroundSettingsManager,
+                preferencesRepository = preferencesRepository
+            )
         }
     }
 }

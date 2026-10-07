@@ -3,6 +3,7 @@ package com.betanooblabs.chatalarm.notification
 import android.content.Context
 import com.betanooblabs.chatalarm.alarm.ChatAlarmManager
 import com.betanooblabs.chatalarm.settings.ChatAlarmPreferencesRepository
+import com.betanooblabs.chatalarm.setup.BackgroundSettingsManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -33,5 +34,13 @@ object NotificationModule {
         @ApplicationContext context: Context
     ): ChatAlarmManager {
         return ChatAlarmManager(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideBackgroundSettingsManager(
+        @ApplicationContext context: Context
+    ): BackgroundSettingsManager {
+        return BackgroundSettingsManager(context)
     }
 }

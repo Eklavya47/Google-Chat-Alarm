@@ -1,5 +1,8 @@
 package com.betanooblabs.chatalarm.notification
 
+import android.content.ComponentName
+import android.content.Intent
+import android.os.IBinder
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
@@ -40,7 +43,14 @@ class ChatNotificationListenerService : NotificationListenerService() {
     override fun onListenerConnected() {
         super.onListenerConnected()
 
+        NotificationListenerStatus.setConnected(true)
         Log.d(TAG, "Notification listener CONNECTED")
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+
+        Log.d(TAG, "Notification listener SERVICE CREATED")
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
@@ -55,17 +65,13 @@ class ChatNotificationListenerService : NotificationListenerService() {
 
             ChatType.DIRECT_MESSAGE -> {
                 Log.d(TAG, "DM received")
-                val senderName = chatNotification.sender ?.trim() ?: return
+                val senderName = chatNotification.sender ?: return
 
                 serviceScope.launch {
                     val allowedContacts =
                         alarmContactRepository.contactNames.first()
 
-                    val isAllowed = allowedContacts.any {
-                        it.equals(senderName, ignoreCase = true)
-                    }
-
-                    if (isAllowed) {
+                    if (senderName in allowedContacts) {
                         Log.d(TAG, "ALARM_ALLOWED: $senderName")
                         chatAlarmManager.startAlarm()
                     } else {
@@ -98,11 +104,27 @@ class ChatNotificationListenerService : NotificationListenerService() {
     override fun onListenerDisconnected() {
         super.onListenerDisconnected()
 
+        NotificationListenerStatus.setConnected(false)
         Log.d(TAG, "Notification listener DISCONNECTED")
     }
 
     override fun onDestroy() {
+        Log.d(TAG, "Notification listener SERVICE DESTROYED")
+
         serviceScope.cancel()
+
+        NotificationListenerStatus.setConnected(false)
+
         super.onDestroy()
+    }
+
+    override fun onUnbind(intent: Intent?): Boolean {
+        Log.d(TAG, "Notification listener UNBOUND")
+        return super.onUnbind(intent)
+    }
+
+    override fun onBind(intent: Intent?): IBinder? {
+        Log.d(TAG, "Notification listener BIND")
+        return super.onBind(intent)
     }
 }

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -27,6 +28,30 @@ class AlarmContactViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = emptySet()
         )
+
+    val alarmSoundUri: StateFlow<String?> =
+        repository.alarmSoundUri.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = null
+        )
+
+    fun setAlarmSoundUri(uri: String) {
+        viewModelScope.launch {
+            repository.setAlarmSoundUri(uri)
+        }
+    }
+
+    fun validateAlarmSound() {
+        viewModelScope.launch {
+            val uri = repository.alarmSoundUri.first()
+                ?: return@launch
+
+            if (!repository.isAlarmSoundAvailable(uri)) {
+                repository.clearAlarmSoundUri()
+            }
+        }
+    }
 
     fun setUserChatName(name: String) {
         viewModelScope.launch {

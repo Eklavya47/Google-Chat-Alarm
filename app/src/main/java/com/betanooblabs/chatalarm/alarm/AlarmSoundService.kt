@@ -8,14 +8,29 @@ import android.app.Service
 import android.content.Intent
 import android.media.AudioAttributes
 import android.media.MediaPlayer
+import android.net.Uri
 import android.os.IBinder
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import androidx.core.app.NotificationCompat
 import com.betanooblabs.chatalarm.R
+import com.betanooblabs.chatalarm.settings.ChatAlarmPreferencesRepository
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import javax.inject.Inject
+import androidx.core.net.toUri
 
+@AndroidEntryPoint
 class AlarmSoundService : Service() {
+
+    @Inject
+    lateinit var chatAlarmPreferencesRepository: ChatAlarmPreferencesRepository
 
     companion object {
         private const val CHANNEL_ID = "chat_alarm"
@@ -28,6 +43,8 @@ class AlarmSoundService : Service() {
             private set
     }
 
+    private val serviceScope =
+        CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var mediaPlayer: MediaPlayer? = null
     private var vibrator: Vibrator? = null
 
@@ -60,22 +77,19 @@ class AlarmSoundService : Service() {
     }
 
     private fun startAlarm() {
-        mediaPlayer = MediaPlayer.create(
-            this,
-            R.raw.alarm_sound
-        ).apply {
-            isLooping = true
+        serviceScope.launch {
+            val uriString =
+                chatAlarmPreferencesRepository.alarmSoundUri.first()
 
-            setAudioAttributes(
-                AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_ALARM)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build()
-            )
-
-            start()
+            withContext(Dispatchers.Main) {
+                startAlarmPlayback(uriString)
+            }
         }
 
+        startVibration()
+    }
+
+    private fun startVibration() {
         val vibratorManager =
             getSystemService(VIBRATOR_MANAGER_SERVICE) as VibratorManager
 
@@ -93,6 +107,68 @@ class AlarmSoundService : Service() {
                 0
             )
         )
+    }
+
+    private fun startAlarmPlayback(uriString: String?) {
+        mediaPlayer = MediaPlayer()
+
+        try {
+            if (uriString != null) {
+                val uri = uriString.toUri()
+
+                mediaPlayer?.setDataSource(
+                    this,
+                    uri
+                )
+            } else {
+                mediaPlayer?.setDataSource(
+                    this,
+                    "android.resource://$packageName/${R.raw.alarm_sound}".toUri()
+                )
+            }
+
+            mediaPlayer?.setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .setContentType(
+                        AudioAttributes.CONTENT_TYPE_SONIFICATION
+                    )
+                    .build()
+            )
+
+            mediaPlayer?.isLooping = true
+
+            mediaPlayer?.setOnPreparedListener {
+                it.start()
+            }
+
+            mediaPlayer?.prepareAsync()
+
+        } catch (_: Exception) {
+            playDefaultAlarm()
+        }
+    }
+
+    private fun playDefaultAlarm() {
+        mediaPlayer?.release()
+
+        mediaPlayer = MediaPlayer.create(
+            this,
+            R.raw.alarm_sound
+        ).apply {
+            isLooping = true
+
+            setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .setContentType(
+                        AudioAttributes.CONTENT_TYPE_SONIFICATION
+                    )
+                    .build()
+            )
+
+            start()
+        }
     }
 
     private fun stopAlarm() {
