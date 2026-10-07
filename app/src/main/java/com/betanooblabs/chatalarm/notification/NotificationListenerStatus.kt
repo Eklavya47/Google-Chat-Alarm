@@ -42,22 +42,4 @@ object NotificationListenerStatus {
             context.startActivity(intent)
         }
     }
-
-    fun requestRebind(context: Context) {
-        if (!isListenerEnabled(context)) {
-            return
-        }
-
-        val componentName = ComponentName(
-            context,
-            ChatNotificationListenerService::class.java
-        )
-
-        NotificationListenerService.requestRebind(componentName)
-
-        Log.d(
-            "ChatAlarm",
-            "Requested notification listener rebind"
-        )
-    }
 }

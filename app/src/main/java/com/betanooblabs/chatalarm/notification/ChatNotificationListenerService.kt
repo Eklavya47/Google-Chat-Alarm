@@ -1,6 +1,5 @@
 package com.betanooblabs.chatalarm.notification
 
-import android.content.ComponentName
 import android.content.Intent
 import android.os.IBinder
 import android.service.notification.NotificationListenerService
