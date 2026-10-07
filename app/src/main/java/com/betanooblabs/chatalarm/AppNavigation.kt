@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.betanooblabs.chatalarm.settings.AlarmContactsScreen
+import com.betanooblabs.chatalarm.settings.SettingsScreen
 
 @Composable
 fun AppNavigation() {
@@ -16,14 +16,18 @@ fun AppNavigation() {
     ) {
         composable("home") {
             HomeScreen(
-                onAlarmContactsClick = {
-                    navController.navigate("alarm_contacts")
+                onSettingsClick = {
+                    navController.navigate("settings")
                 }
             )
         }
 
-        composable("alarm_contacts") {
-            AlarmContactsScreen()
+        composable("settings") {
+            SettingsScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }
